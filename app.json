@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "GlowStyle AI",
+    "slug": "glowstyle-ai",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#121212",
+    "icon": "./src/assets/images/icon.png",
+    "splash": {
+      "backgroundColor": "#121212",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "mn.glowstyle.ai"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#121212"
+      },
+      "package": "mn.glowstyle.ai",
+      "edgeToEdgeLayoutEnabled": true
+    },
+    "plugins": [
+      "expo-font"
+    ],
+    "newArchEnabled": true
+  }
+}

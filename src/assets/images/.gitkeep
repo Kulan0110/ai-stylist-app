@@ -1,0 +1,5 @@
+# Place base-avatar.png here.
+# Recommended: a transparent PNG silhouette at 400x700px.
+# The app currently uses a placeholder URI — swap image_url in aiService.js
+# or update BASE_AVATAR_URI in AvatarScreen/StylistScreen to use:
+#   require('../assets/images/base-avatar.png')
