@@ -14,17 +14,22 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "mn.glowstyle.ai"
+      "bundleIdentifier": "mn.glowstyle.ai",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Таны байршилд тохирсон цаг агаарын мэдээлэл авахад ашиглана."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#121212"
       },
       "package": "mn.glowstyle.ai",
-      "edgeToEdgeLayoutEnabled": true
+      "edgeToEdgeLayoutEnabled": true,
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-location"
     ],
     "newArchEnabled": true
   }

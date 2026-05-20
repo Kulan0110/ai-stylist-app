@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Linking, Animated,
+  StyleSheet, Linking,
 } from 'react-native';
 import { colors, spacing, typography, borderRadius } from '../utils/theme';
+import type { OutfitData, OutfitItem } from '../types';
 
-export default function OutfitCard({ outfitData }) {
+interface Props {
+  outfitData: OutfitData | null;
+}
+
+export default function OutfitCard({ outfitData }: Props) {
   const [upsellOpen, setUpsellOpen] = useState(false);
   if (!outfitData) return null;
 
@@ -78,7 +83,12 @@ export default function OutfitCard({ outfitData }) {
   );
 }
 
-function LayerChip({ item, index }) {
+interface LayerChipProps {
+  item: OutfitItem;
+  index: number;
+}
+
+function LayerChip({ item, index }: LayerChipProps) {
   const Z_COLORS = ['#60A5FA','#FB923C','#34D399','#F472B6','#FBBF24','#A78BFA'];
   const dot = Z_COLORS[index % Z_COLORS.length];
 
@@ -120,7 +130,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     gap: spacing.xs,
     marginRight: spacing.sm,
-  },
+  } as any,
   aiIcon: { fontSize: 14 },
   aiBadgeText: { ...typography.label, color: colors.accent },
   glowLine: {
@@ -169,7 +179,7 @@ const styles = StyleSheet.create({
   chipsRow: {
     paddingBottom: spacing.md,
     gap: spacing.sm,
-  },
+  } as any,
   chip: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -180,7 +190,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-  },
+  } as any,
   chipDot: {
     width: 8,
     height: 8,
@@ -219,7 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xs,
     gap: spacing.sm,
-  },
+  } as any,
   sponsorPill: {
     backgroundColor: colors.accent,
     borderRadius: borderRadius.full,

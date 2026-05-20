@@ -1,5 +1,7 @@
 // GlowDark Design System — GlowStyle AI
 
+import { TextStyle, ViewStyle } from 'react-native';
+
 export const colors = {
   background: '#121212',
   card:        '#1E1E1E',
@@ -14,7 +16,7 @@ export const colors = {
   black:       '#000000',
   overlay:     'rgba(0,0,0,0.80)',
   error:       '#F87171',
-};
+} as const;
 
 export const spacing = {
   xs:  4,
@@ -23,9 +25,9 @@ export const spacing = {
   lg:  24,
   xl:  32,
   xxl: 48,
-};
+} as const;
 
-export const typography = {
+export const typography: Record<string, TextStyle> = {
   h1:      { fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
   h2:      { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   h3:      { fontSize: 18, fontWeight: '700' },
@@ -42,7 +44,7 @@ export const borderRadius = {
   lg:   18,
   xl:   26,
   full: 9999,
-};
+} as const;
 
 export const shadows = {
   accentGlow: {
@@ -59,4 +61,4 @@ export const shadows = {
     shadowRadius: 14,
     elevation: 8,
   },
-};
+} as const;

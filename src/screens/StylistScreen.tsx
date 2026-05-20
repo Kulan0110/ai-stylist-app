@@ -1,18 +1,22 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  View, Text, Image, ScrollView, StyleSheet, SafeAreaView,
+  View, Text, Image, ScrollView, StyleSheet,
   StatusBar, TouchableOpacity, Share, Dimensions, Animated,
 } from 'react-native';
-import { colors, spacing, typography, borderRadius, shadows } from '../utils/theme';
-import OutfitCard from '../components/OutfitCard';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, spacing, typography, borderRadius } from '../utils/theme';
+import OutfitCard   from '../components/OutfitCard';
 import CustomButton from '../components/CustomButton';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { RootTabParamList, OutfitData, OutfitItem } from '../types';
 
 const { width: W, height: H } = Dimensions.get('window');
 const CANVAS_W = W * 0.50;
 const CANVAS_H = H * 0.46;
 
-// Absolute layering z-index map
-const LAYER_Z = {
+type Props = BottomTabScreenProps<RootTabParamList, 'Stylist'>;
+
+const LAYER_Z: Record<string, number> = {
   'Base Avatar': 0,
   Bottom:        1,
   'Base Layer':  2,
@@ -22,7 +26,14 @@ const LAYER_Z = {
   Accessory:     6,
 };
 
-const LAYER_META = [
+interface LayerMeta {
+  layer: string;
+  z: number;
+  color: string;
+  icon: string;
+}
+
+const LAYER_META: LayerMeta[] = [
   { layer: 'Bottom',     z: 1, color: '#F472B6', icon: '👖' },
   { layer: 'Base Layer', z: 2, color: '#60A5FA', icon: '👕' },
   { layer: 'Mid Layer',  z: 3, color: '#FB923C', icon: '🧥' },
@@ -33,20 +44,20 @@ const LAYER_META = [
 
 const BASE_AVATAR_URI = 'https://via.placeholder.com/400x700/121212/FFFFFF?text=%F0%9F%91%A4';
 
-export default function StylistScreen({ route, navigation }) {
-  const outfitData = route?.params?.outfitData ?? null;
+export default function StylistScreen({ route, navigation }: Props) {
+  const outfitData: OutfitData | null = route?.params?.outfitData ?? null;
   const [saved, setSaved]           = useState(false);
-  const [activeLayerIdx, setActive] = useState(null);
+  const [activeLayerIdx, setActive] = useState<number | null>(null);
   const fadeAnim                    = useRef(new Animated.Value(0)).current;
 
-  const sortedLayers = useMemo(() => {
+  const sortedLayers = useMemo<OutfitItem[]>(() => {
     if (!outfitData?.selected_items) return [];
     return [...outfitData.selected_items].sort(
       (a, b) => (LAYER_Z[a.layer] ?? 0) - (LAYER_Z[b.layer] ?? 0)
     );
   }, [outfitData]);
 
-  useMemo(() => {
+  useEffect(() => {
     Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
   }, [outfitData]);
 
@@ -55,11 +66,6 @@ export default function StylistScreen({ route, navigation }) {
     await Share.share({ message: `GlowStyle AI ✦ ${outfitData.outfit_title}\n\n${outfitData.stylist_comment}` });
   }
 
-  function getLayerMeta(layerName) {
-    return LAYER_META.find((l) => l.layer === layerName) ?? { color: colors.accent, icon: '●', z: 0 };
-  }
-
-  // Empty state
   if (!outfitData) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -88,39 +94,33 @@ export default function StylistScreen({ route, navigation }) {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
+      <View style={styles.topBar}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <View style={styles.topCenter}>
+          <Text style={styles.topSub}>AI СТАЙЛИСТ</Text>
+          <Text style={styles.topTitle}>Өнөөдрийн Look</Text>
+        </View>
+        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
+          <Text style={styles.shareIcon}>↗</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
 
-        {/* ── Top bar ── */}
-        <View style={styles.topBar}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <View style={styles.topCenter}>
-            <Text style={styles.topSub}>AI СТАЙЛИСТ</Text>
-            <Text style={styles.topTitle}>Өнөөдрийн Look</Text>
-          </View>
-          <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-            <Text style={styles.shareIcon}>↗</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* ── Main split: Canvas + Layer Stack ── */}
         <Animated.View style={[styles.mainSplit, { opacity: fadeAnim }]}>
 
-          {/* Left: Avatar Canvas */}
           <View style={[styles.canvas, { width: CANVAS_W, height: CANVAS_H }]}>
-            {/* Corner marks */}
             <View style={styles.cornerTL} />
             <View style={styles.cornerBR} />
 
-            {/* zIndex 0 — Base avatar */}
             <Image
               source={{ uri: BASE_AVATAR_URI }}
               style={[styles.layerImg, { zIndex: LAYER_Z['Base Avatar'] }]}
               resizeMode="contain"
             />
 
-            {/* zIndex 1–6 — Outfit layers in order */}
             {sortedLayers.map((item) => (
               <Image
                 key={item.item_id}
@@ -130,7 +130,6 @@ export default function StylistScreen({ route, navigation }) {
               />
             ))}
 
-            {/* Outfit title at bottom of canvas */}
             <View style={styles.canvasTitle}>
               <Text style={styles.canvasTitleText} numberOfLines={1}>
                 {outfitData.outfit_title}
@@ -138,12 +137,11 @@ export default function StylistScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* Right: Layer stack */}
           <View style={styles.layerStack}>
             <Text style={styles.stackHeader}>ДАВХАР</Text>
 
             {LAYER_META.map((meta, idx) => {
-              const matched = sortedLayers.find((s) => s.layer === meta.layer);
+              const matched  = sortedLayers.find((s) => s.layer === meta.layer);
               const isActive = matched != null;
               const isFocused = activeLayerIdx === idx;
 
@@ -178,7 +176,6 @@ export default function StylistScreen({ route, navigation }) {
           </View>
         </Animated.View>
 
-        {/* ── Active layer detail ── */}
         {activeLayerIdx !== null && (() => {
           const meta    = LAYER_META[activeLayerIdx];
           const matched = sortedLayers.find((s) => s.layer === meta.layer);
@@ -197,17 +194,14 @@ export default function StylistScreen({ route, navigation }) {
           );
         })()}
 
-        {/* ── AI Outfit Card ── */}
         <OutfitCard outfitData={outfitData} />
 
-        {/* ── Vibe Score ── */}
         <View style={styles.vibeRow}>
-          <VibeBar label="Тохирол"   value={96} color="#A855F7" />
-          <VibeBar label="Дулаан"    value={88} color="#60A5FA" />
+          <VibeBar label="Тохирол"   value={96}  color="#A855F7" />
+          <VibeBar label="Дулаан"    value={88}  color="#60A5FA" />
           <VibeBar label="Стайл"     value={100} color="#34D399" />
         </View>
 
-        {/* ── Action buttons ── */}
         <View style={styles.actions}>
           <CustomButton
             label={saved ? '✓ Хадгалагдсан' : '🔖 Хадгалах'}
@@ -226,7 +220,6 @@ export default function StylistScreen({ route, navigation }) {
           />
         </View>
 
-        {/* ── Гал харагдана banner ── */}
         <View style={styles.fireBanner}>
           <Text style={styles.fireBannerText}>🔥  Гал харагдана — Төгс зохионо  🔥</Text>
         </View>
@@ -236,11 +229,12 @@ export default function StylistScreen({ route, navigation }) {
   );
 }
 
-function VibeBar({ label, value, color }) {
+interface VibeBarProps { label: string; value: number; color: string; }
+function VibeBar({ label, value, color }: VibeBarProps) {
   return (
     <View style={styles.vibeItem}>
       <View style={styles.vibeBarTrack}>
-        <View style={[styles.vibeBarFill, { width: `${value}%`, backgroundColor: color }]} />
+        <View style={[styles.vibeBarFill, { width: `${value}%` as any, backgroundColor: color }]} />
       </View>
       <View style={styles.vibeBarFooter}>
         <Text style={styles.vibeLabel}>{label}</Text>
@@ -252,14 +246,14 @@ function VibeBar({ label, value, color }) {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: colors.background },
-  scroll: { padding: spacing.md, paddingBottom: 100 },
+  scroll: { paddingHorizontal: spacing.md, paddingTop: spacing.sm, paddingBottom: 140 },
 
-  // Top bar
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   backBtn: {
     width: 42, height: 42, borderRadius: 21,
@@ -279,14 +273,12 @@ const styles = StyleSheet.create({
   },
   shareIcon: { color: colors.accent, fontSize: 18, fontWeight: '800' },
 
-  // Main split
   mainSplit: {
     flexDirection: 'row',
     gap: spacing.md,
     marginBottom: spacing.md,
   },
 
-  // Canvas
   canvas: {
     position: 'relative',
     backgroundColor: colors.card,
@@ -326,7 +318,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Layer stack (right column)
   layerStack: {
     flex: 1,
     gap: spacing.sm,
@@ -359,7 +350,6 @@ const styles = StyleSheet.create({
   },
   stackLayerName: { ...typography.caption, color: colors.accent, textAlign: 'center', fontSize: 9 },
 
-  // Layer detail
   layerDetail: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.md,
@@ -376,7 +366,6 @@ const styles = StyleSheet.create({
   layerDetailId:     { ...typography.caption, color: colors.textMuted },
   layerDetailReason: { ...typography.body, color: colors.textOff, lineHeight: 21 },
 
-  // Vibe bars
   vibeRow: {
     backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
@@ -397,7 +386,6 @@ const styles = StyleSheet.create({
   vibeLabel:     { ...typography.caption, color: colors.textMuted },
   vibeValue:     { ...typography.caption, fontWeight: '800' },
 
-  // Actions
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
@@ -405,7 +393,6 @@ const styles = StyleSheet.create({
   },
   actionBtn: { flex: 1 },
 
-  // Fire banner
   fireBanner: {
     backgroundColor: colors.accentAlpha,
     borderRadius: borderRadius.md,
@@ -419,7 +406,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Empty state
   emptyState: {
     flex: 1,
     alignItems: 'center', justifyContent: 'center',

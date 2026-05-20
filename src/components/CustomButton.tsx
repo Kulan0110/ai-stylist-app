@@ -2,8 +2,24 @@ import React, { useRef } from 'react';
 import {
   TouchableOpacity, Text, StyleSheet,
   Animated, ActivityIndicator, View,
+  StyleProp, ViewStyle,
 } from 'react-native';
 import { colors, spacing, borderRadius } from '../utils/theme';
+
+type Variant = 'primary' | 'ghost' | 'dark' | 'danger';
+type Size = 'sm' | 'md' | 'lg';
+
+interface Props {
+  label: string;
+  onPress?: () => void;
+  variant?: Variant;
+  size?: Size;
+  loading?: boolean;
+  disabled?: boolean;
+  icon?: React.ReactNode;
+  fullWidth?: boolean;
+  style?: StyleProp<ViewStyle>;
+}
 
 export default function CustomButton({
   label,
@@ -15,7 +31,7 @@ export default function CustomButton({
   icon = null,
   fullWidth = false,
   style,
-}) {
+}: Props) {
   const scale = useRef(new Animated.Value(1)).current;
 
   function handlePressIn() {
@@ -31,14 +47,14 @@ export default function CustomButton({
   return (
     <Animated.View style={[{ transform: [{ scale }] }, fullWidth && { width: '100%' }, style]}>
       <TouchableOpacity
-        onPress={isDisabled ? null : onPress}
+        onPress={isDisabled ? undefined : onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         activeOpacity={0.88}
         style={[
           styles.base,
-          styles[`variant_${variant}`],
-          styles[`size_${size}`],
+          styles[`variant_${variant}` as keyof typeof styles],
+          styles[`size_${size}` as keyof typeof styles],
           fullWidth && styles.fullWidth,
           isDisabled && styles.disabled,
         ]}
@@ -48,7 +64,7 @@ export default function CustomButton({
         ) : (
           <View style={styles.inner}>
             {icon && <View style={styles.iconWrap}>{icon}</View>}
-            <Text style={[styles.label, styles[`label_${variant}`], styles[`labelSz_${size}`]]}>
+            <Text style={[styles.label, styles[`label_${variant}` as keyof typeof styles], styles[`labelSz_${size}` as keyof typeof styles]]}>
               {label}
             </Text>
           </View>

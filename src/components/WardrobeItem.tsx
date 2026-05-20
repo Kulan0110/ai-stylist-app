@@ -1,9 +1,10 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { colors, spacing, typography, borderRadius } from '../utils/theme';
+import type { WardrobeItem as WardrobeItemType } from '../types';
 
 // Duo-tone art mapping — white graphic on #121212 canvas
-const ITEM_ART = {
+const ITEM_ART: Record<string, { glyph: string; mnName: string }> = {
   'T-Shirt':       { glyph: '👕', mnName: 'Цамц' },
   'Hoodie':        { glyph: '🧥', mnName: 'Хүүди' },
   'Puffer Jacket': { glyph: '🥼', mnName: 'Пуффер' },
@@ -16,7 +17,7 @@ const ITEM_ART = {
   'Turtleneck':    { glyph: '👕', mnName: 'Боодол' },
 };
 
-const LAYER_ACCENT = {
+const LAYER_ACCENT: Record<string, string> = {
   'Base Layer': '#60A5FA',
   'Mid Layer':  '#FB923C',
   Outerwear:    '#34D399',
@@ -25,9 +26,18 @@ const LAYER_ACCENT = {
   Accessory:    '#A78BFA',
 };
 
-export default function WardrobeItem({ item, onPress, selected = false }) {
+interface Props {
+  item: WardrobeItemType;
+  onPress?: (item: WardrobeItemType) => void;
+  selected?: boolean;
+}
+
+export default function WardrobeItem({ item, onPress, selected = false }: Props) {
   const art = ITEM_ART[item.type] ?? { glyph: '🧺', mnName: item.type };
   const layerColor = LAYER_ACCENT[item.layer] ?? colors.textMuted;
+  const [imgError, setImgError] = useState(false);
+
+  const hasImage = !!item.image_url && !imgError;
 
   return (
     <TouchableOpacity
@@ -35,17 +45,23 @@ export default function WardrobeItem({ item, onPress, selected = false }) {
       onPress={() => onPress?.(item)}
       activeOpacity={0.75}
     >
-      {/* Duo-tone Art Panel */}
+      {/* Art Panel */}
       <View style={styles.artPanel}>
-        {/* Radial glow behind glyph when selected */}
         {selected && <View style={styles.glowCircle} />}
 
-        <Text style={styles.glyph}>{art.glyph}</Text>
+        {hasImage ? (
+          <Image
+            source={{ uri: item.image_url }}
+            style={styles.artImage}
+            resizeMode="cover"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <Text style={styles.glyph}>{art.glyph}</Text>
+        )}
 
-        {/* Layer dot — top right */}
         <View style={[styles.layerDot, { backgroundColor: layerColor }]} />
 
-        {/* Selected checkmark */}
         {selected && (
           <View style={styles.checkBadge}>
             <Text style={styles.checkText}>✓</Text>
@@ -67,8 +83,8 @@ export default function WardrobeItem({ item, onPress, selected = false }) {
   );
 }
 
-function _colorHex(name) {
-  const map = {
+function _colorHex(name: string): string {
+  const map: Record<string, string> = {
     White: '#F5F5F5', Black: '#303030', Olive: '#556B2F',
     Khaki: '#C3B091', Grey: '#757575', Cream: '#FAF0DC',
     Indigo: '#3949AB', Charcoal: '#455A64', 'White/Purple': '#A855F7',
@@ -93,6 +109,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 14,
     elevation: 12,
+  },
+
+  artImage: {
+    width: '100%', height: '100%',
+    position: 'absolute', top: 0, left: 0,
   },
 
   // Duo-tone art panel
